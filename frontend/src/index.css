@@ -1,0 +1,193 @@
+@import "tailwindcss";
+/** root lama
+  :root {
+    font-family: Inter, system-ui, sans-serif;
+    background: #050914;
+    color: white;
+  }
+  */
+:root {
+  font-family: Inter, system-ui, sans-serif;
+
+  --sap-bg: #081426;
+  --sap-panel: #0d1d34;
+  --sap-panel-hover: #122743;
+
+  --sap-border: #31557d;
+
+  --sap-blue: #4f8edb;
+  --sap-blue-bright: #72b7ff;
+
+  --sap-text: #edf5ff;
+  --sap-muted: #9bb0c9;
+
+  background: var(--sap-bg);
+  color: var(--sap-text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+  /*background: #050914;*/
+  background: var(--sap-bg);
+}
+
+/*access in*/
+@keyframes accessIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*interference*/
+@keyframes interference {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+
+  25% {
+    opacity: 1;
+    transform: translateX(-2px);
+  }
+
+  50% {
+    opacity: 0.3;
+    transform: translateX(3px);
+  }
+
+  75% {
+    opacity: 0.8;
+    transform: translateX(-1px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+
+  25% {
+    transform: translate(-3px, 1px);
+  }
+
+  50% {
+    transform: translate(2px, -1px);
+  }
+
+  75% {
+    transform: translate(-1px, 2px);
+  }
+
+  100% {
+    transform: translate(0);
+  }
+}
+
+@keyframes archiveTransition {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+/*Sweep*/
+@keyframes signalSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+/* SAP Bytes custom scrollbar */
+.sap-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sap-border) transparent;
+}
+
+.sap-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sap-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sap-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--sap-border);
+}
+
+.sap-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--sap-blue-bright);
+}
