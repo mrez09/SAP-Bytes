@@ -29,7 +29,18 @@ function ArchiveHome() {
       type: "LOCAL VOICE STUDIO",
       status: "ONLINE",
       videoId: "dQw4w9WgXcQ",
+      subtitle: "LOCAL VOICE SYNTHESIS STUDIO",
       description: "Local Indonesian voice synthesis and cloning studio.",
+
+      features: [
+        "Voice cloning",
+        "Text-to-speech",
+        "Voice library",
+        "Audio generation",
+        "Playback controls",
+      ],
+
+      tech: ["React", "FastAPI", "F5-TTS", "FFmpeg"],
     },
     {
       id: "02",
@@ -37,8 +48,17 @@ function ArchiveHome() {
       type: "UTILITY SYSTEM",
       status: "ONLINE",
       videoId: "",
+      subtitle: "INTERACTIVE OVERLAY UTILITY",
       description:
-        "Overlay archive system for game walkthroughs and live coding.",
+        "Overlay archive system for live coding and game walkthroughs.",
+      features: [
+        "Product catalog",
+        "Order request",
+        "Inventory management",
+        "Admin order status",
+        "MOQ validation",
+      ],
+      tech: ["Go", "React", "GORM", "PostgreSQL", "Neon"],
     },
     {
       id: "03",
@@ -46,6 +66,7 @@ function ArchiveHome() {
       type: "VISUAL EXPERIMENT",
       status: "ON HOLD",
       videoId: "",
+      subtitle: "LOCAL AI IMAGE EXPERIMENT",
       description: "Local image generation and visual experimentation project.",
     },
   ];
@@ -321,6 +342,30 @@ function ArchiveHome() {
                         00:00
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                <div
+                  className={`mt-3 border border-blue-400/20 bg-[var(--sap-bg)] transition-all duration-300 ${
+                    switchingProject
+                      ? "translate-y-1 opacity-0"
+                      : "translate-y-0 opacity-100"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-4 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[10px] tracking-[0.25em] text-[var(--sap-text)]">
+                        {activeProject.name}
+                      </p>
+
+                      <p className="mt-1 font-mono text-[7px] tracking-[0.25em] text-[var(--sap-blue-bright)]">
+                        {activeProject.subtitle}
+                      </p>
+                    </div>
+
+                    <span className="shrink-0 font-mono text-[7px] tracking-[0.2em] text-[var(--sap-muted)]">
+                      CH.{activeProject.id}
+                    </span>
                   </div>
                 </div>
 
@@ -797,9 +842,68 @@ function ArchiveHome() {
                       {detailProject.type}
                     </p>
 
-                    <p className="mt-6 text-[9px] leading-6 tracking-[0.08em] text-[var(--sap-muted)]">
-                      {detailProject.description}
-                    </p>
+                    <div className="mt-6">
+                      <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
+                        OVERVIEW
+                      </p>
+
+                      <p className="mt-3 text-[9px] leading-6 tracking-[0.05em] text-[var(--sap-muted)]">
+                        {detailProject.subtitle} designed as part of the
+                        SAP_Bytes software archive.
+                      </p>
+                    </div>
+
+                    <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
+                      <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
+                        FEATURES
+                      </p>
+
+                      <div className="mt-4 space-y-2">
+                        {detailProject.features.map((feature) => (
+                          <div
+                            key={feature}
+                            className="flex items-center gap-3"
+                          >
+                            <span className="h-px w-3 bg-[var(--sap-blue-bright)]/60" />
+
+                            <span className="font-mono text-[8px] tracking-[0.08em] text-[var(--sap-muted)]">
+                              {feature}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-6">
+                      <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
+                        OVERVIEW
+                      </p>
+
+                      <p className="mt-3 text-[9px] leading-6 tracking-[0.05em] text-[var(--sap-muted)]">
+                        {detailProject.subtitle} designed as part of the
+                        SAP_Bytes software archive.
+                      </p>
+                    </div>
+
+                    <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
+                      <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
+                        FEATURES
+                      </p>
+
+                      <div className="mt-4 space-y-2">
+                        {detailProject.features.map((feature) => (
+                          <div
+                            key={feature}
+                            className="flex items-center gap-3"
+                          >
+                            <span className="h-px w-3 bg-[var(--sap-blue-bright)]/60" />
+
+                            <span className="font-mono text-[8px] tracking-[0.08em] text-[var(--sap-muted)]">
+                              {feature}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="mt-8 border-t border-[var(--sap-border)]/40 pt-5">
