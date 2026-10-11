@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import YouTubeArchivePlayer from "./YouTubeArchivePlayer";
+import bytesImage from "../assets/bytes.png";
 
 function ArchiveHome() {
   const [broadcastTime, setBroadcastTime] = useState(0);
@@ -44,7 +45,7 @@ function ArchiveHome() {
       name: "VICA",
       type: "LOCAL VOICE STUDIO",
       status: "ONLINE",
-      videoId: "dQw4w9WgXcQ",
+      videoId: "N1y9ilJzp7s",
       subtitle: "LOCAL VOICE SYNTHESIS STUDIO",
       overview:
         "VICA is a local voice studio for Indonesian text-to-speech and voice cloning, built to explore AI-powered voice generation on a personal computer.",
@@ -65,7 +66,7 @@ function ArchiveHome() {
       name: "PEEKPANEL",
       type: "UTILITY SYSTEM",
       status: "ONLINE",
-      videoId: "",
+      videoId: "2ynnUYg5On0",
       subtitle: "INTERACTIVE OVERLAY UTILITY",
       overview:
         "PeekPanel is a utility system for organizing game walkthroughs and live coding overlays, with a Go backend and PostgreSQL database.",
@@ -85,7 +86,7 @@ function ArchiveHome() {
       name: "KIVA",
       type: "VISUAL EXPERIMENT",
       status: "ON HOLD",
-      videoId: "",
+      videoId: "JE8hZ3BznXU",
       subtitle: "LOCAL AI IMAGE EXPERIMENT",
       overview:
         "KIVA is a local AI image generation project built to explore diffusion models, prompt experimentation, and image generation workflows.",
@@ -242,7 +243,7 @@ function ArchiveHome() {
               <div className="hidden h-7 w-px bg-[var(--sap-blue)]/20 md:block" />
 
               <span className="hidden text-[9px] tracking-[0.3em] text-[var(--sap-blue-bright)] md:block">
-                CHANNEL 01
+                CHANNEL {activeProject.id}
               </span>
             </div>
 
@@ -279,7 +280,7 @@ function ArchiveHome() {
               </p>
 
               <h1 className="mt-3 text-3xl font-semibold tracking-[0.12em] md:text-5xl">
-                CHANNEL 01
+                CHANNEL {activeProject.id}
               </h1>
 
               <p className="mt-3 max-w-xl text-xs leading-relaxed tracking-[0.12em] text-slate-500">
@@ -505,19 +506,19 @@ function ArchiveHome() {
               </div>
 
               <div className="p-5">
-                {/* Portrait placeholder */}
+                {/* Portrait image */}
                 <div className="relative mx-auto aspect-square max-w-[180px] overflow-hidden border border-blue-400/20 bg-[var(--sap-bg)]">
-                  <div className="absolute inset-0 opacity-30">
+                  <img
+                    src={bytesImage}
+                    alt="SAP Bytes"
+                    className="absolute inset-0 h-full w-full object-cover object-[center_25%]"
+                  />
+
+                  <div className="pointer-events-none absolute inset-0 opacity-30">
                     <div className="h-full w-full bg-[linear-gradient(rgba(96,165,250,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(96,165,250,0.15)_1px,transparent_1px)] bg-[size:12px_12px]" />
                   </div>
 
-                  <div className="relative flex h-full items-center justify-center">
-                    <span className="text-[8px] tracking-[0.25em] text-blue-400/50">
-                      IMG_01
-                    </span>
-                  </div>
-
-                  <div className="absolute inset-x-0 top-0 h-px animate-[scan_2s_linear_infinite] bg-[var(--sap-blue)]/50" />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px animate-[scan_2s_linear_infinite] bg-[var(--sap-blue)]/50" />
                 </div>
 
                 {/* Status */}
