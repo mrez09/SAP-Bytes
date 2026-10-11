@@ -15,6 +15,22 @@ function ArchiveHome() {
   });
   const [viewMode, setViewMode] = useState("grid");
 
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [commandSearch, setCommandSearch] = useState("");
+  const [commandIndex, setCommandIndex] = useState(0);
+
+  const commandItems = [
+    { label: "VICA", action: "VICA" },
+    { label: "PEEKPANEL", action: "PEEKPANEL" },
+    { label: "KIVA", action: "KIVA" },
+    { label: "SWITCH GRID VIEW", action: "GRID" },
+    { label: "SWITCH SIGNAL VIEW", action: "SIGNAL" },
+  ];
+
+  const filteredCommands = commandItems.filter((command) =>
+    command.label.toLowerCase().includes(commandSearch.trim().toLowerCase()),
+  );
+
   useEffect(() => {
     localStorage.setItem(
       "sap-bytes-pinned-projects",
@@ -30,6 +46,8 @@ function ArchiveHome() {
       status: "ONLINE",
       videoId: "dQw4w9WgXcQ",
       subtitle: "LOCAL VOICE SYNTHESIS STUDIO",
+      overview:
+        "VICA is a local voice studio for Indonesian text-to-speech and voice cloning, built to explore AI-powered voice generation on a personal computer.",
       description: "Local Indonesian voice synthesis and cloning studio.",
 
       features: [
@@ -49,6 +67,8 @@ function ArchiveHome() {
       status: "ONLINE",
       videoId: "",
       subtitle: "INTERACTIVE OVERLAY UTILITY",
+      overview:
+        "PeekPanel is a utility system for organizing game walkthroughs and live coding overlays, with a Go backend and PostgreSQL database.",
       description:
         "Overlay archive system for live coding and game walkthroughs.",
       features: [
@@ -67,7 +87,17 @@ function ArchiveHome() {
       status: "ON HOLD",
       videoId: "",
       subtitle: "LOCAL AI IMAGE EXPERIMENT",
+      overview:
+        "KIVA is a local AI image generation project built to explore diffusion models, prompt experimentation, and image generation workflows.",
       description: "Local image generation and visual experimentation project.",
+      features: [
+        "Local image generation",
+        "Prompt experimentation",
+        "Diffusion model testing",
+        "Image workflow exploration",
+      ],
+
+      tech: ["Python", "Diffusers", "Stable Diffusion", "Hugging Face"],
     },
   ];
 
@@ -122,6 +152,67 @@ function ArchiveHome() {
     "0",
   );
   const seconds = String(broadcastTime % 60).padStart(2, "0");
+
+  //Palette
+  useEffect(() => {
+    const handleCommandPaletteKey = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandPaletteOpen((open) => !open);
+        return;
+      }
+
+      if (!commandPaletteOpen) return;
+
+      if (event.key === "Escape") {
+        setCommandPaletteOpen(false);
+        setCommandSearch("");
+        setCommandIndex(0);
+        return;
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setCommandIndex((index) =>
+          Math.min(index + 1, filteredCommands.length - 1),
+        );
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setCommandIndex((index) => Math.max(index - 1, 0));
+        return;
+      }
+
+      if (event.key === "Enter" && filteredCommands.length > 0) {
+        event.preventDefault();
+        const command = filteredCommands[commandIndex];
+
+        if (!command) return;
+
+        if (["VICA", "PEEKPANEL", "KIVA"].includes(command.action)) {
+          setSelectedProject(command.action);
+          featuredArchiveRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        } else {
+          setViewMode(command.action.toLowerCase());
+        }
+
+        setCommandPaletteOpen(false);
+        setCommandSearch("");
+        setCommandIndex(0);
+      }
+    };
+
+    window.addEventListener("keydown", handleCommandPaletteKey);
+
+    return () => {
+      window.removeEventListener("keydown", handleCommandPaletteKey);
+    };
+  }, [commandPaletteOpen, commandSearch, commandIndex, filteredCommands]);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[var(--sap-bg)] text-white">
@@ -596,6 +687,10 @@ function ArchiveHome() {
 
                         setTimeout(() => {
                           setSelectedProject(project.name);
+                          featuredArchiveRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                          });
                           setSwitchingProject(false);
 
                           featuredArchiveRef.current?.scrollIntoView({
@@ -731,6 +826,10 @@ function ArchiveHome() {
 
                       setTimeout(() => {
                         setSelectedProject(project.name);
+                        featuredArchiveRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
                         setSwitchingProject(false);
 
                         featuredArchiveRef.current?.scrollIntoView({
@@ -816,7 +915,7 @@ function ArchiveHome() {
                   onClick={() => setDetailProject(null)}
                 />
 
-                <div className="relative h-full w-full max-w-md border-l border-[var(--sap-border)] bg-[var(--sap-panel)] p-6 shadow-[-20px_0_60px_rgba(0,0,0,0.35)]">
+                <div className="sap-scrollbar relative h-full w-full max-w-md overflow-y-auto overscroll-contain border-l border-[var(--sap-border)] bg-[var(--sap-panel)] p-6 shadow-[-20px_0_60px_rgba(0,0,0,0.35)]">
                   <div className="flex items-center justify-between border-b border-[var(--sap-border)]/60 pb-4">
                     <div>
                       <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-muted)]">
@@ -848,8 +947,7 @@ function ArchiveHome() {
                       </p>
 
                       <p className="mt-3 text-[9px] leading-6 tracking-[0.05em] text-[var(--sap-muted)]">
-                        {detailProject.subtitle} designed as part of the
-                        SAP_Bytes software archive.
+                        {detailProject.overview}
                       </p>
                     </div>
 
@@ -872,36 +970,22 @@ function ArchiveHome() {
                           </div>
                         ))}
                       </div>
-                    </div>
-                    <div className="mt-6">
-                      <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
-                        OVERVIEW
-                      </p>
 
-                      <p className="mt-3 text-[9px] leading-6 tracking-[0.05em] text-[var(--sap-muted)]">
-                        {detailProject.subtitle} designed as part of the
-                        SAP_Bytes software archive.
-                      </p>
-                    </div>
+                      <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
+                        <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
+                          TECHNOLOGY bro
+                        </p>
 
-                    <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
-                      <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
-                        FEATURES
-                      </p>
-
-                      <div className="mt-4 space-y-2">
-                        {detailProject.features.map((feature) => (
-                          <div
-                            key={feature}
-                            className="flex items-center gap-3"
-                          >
-                            <span className="h-px w-3 bg-[var(--sap-blue-bright)]/60" />
-
-                            <span className="font-mono text-[8px] tracking-[0.08em] text-[var(--sap-muted)]">
-                              {feature}
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {detailProject.tech.map((technology) => (
+                            <span
+                              key={technology}
+                              className="border border-[var(--sap-border)]/60 bg-[var(--sap-bg)]/40 px-3 py-2 font-mono text-[7px] tracking-[0.12em] text-[var(--sap-muted)]"
+                            >
+                              {technology}
                             </span>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -926,6 +1010,16 @@ function ArchiveHome() {
                         CH.{detailProject.id}
                       </span>
                     </div>
+                    <div className="mt-7 border-t border-[var(--sap-border)]/60 pt-5">
+                      <p className="font-mono text-[8px] tracking-[0.25em] text-[var(--sap-blue-bright)]">
+                        ARCHIVE NOTE
+                      </p>
+
+                      <p className="mt-3 font-mono text-[9px] leading-5 tracking-[0.08em] text-[var(--sap-muted)]">
+                        Designed as part of the SAP_Bytes software archive.
+                      </p>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -936,6 +1030,10 @@ function ArchiveHome() {
 
                           setTimeout(() => {
                             setSelectedProject(detailProject.name);
+                            featuredArchiveRef.current?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            });
                             setSwitchingProject(false);
 
                             featuredArchiveRef.current?.scrollIntoView({
@@ -975,6 +1073,93 @@ function ArchiveHome() {
             </div>
           </div>
         </div>
+
+        {/**Palete */}
+        {commandPaletteOpen && (
+          <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/60 px-4 pt-[15vh] backdrop-blur-sm">
+            <div
+              className="w-full max-w-xl overflow-hidden border border-[var(--sap-border)] bg-[var(--sap-panel)] shadow-[0_20px_80px_rgba(0,0,0,0.5)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-[var(--sap-border)]/60 px-4 py-3">
+                <div>
+                  <p className="font-mono text-[10px] tracking-[0.25em] text-[var(--sap-blue-bright)]">
+                    SAP_BYTES COMMAND
+                  </p>
+                  <p className="mt-1 font-mono text-[8px] tracking-[0.15em] text-[var(--sap-muted)]">
+                    ARCHIVE OPERATOR // COMMAND INTERFACE
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setCommandPaletteOpen(false)}
+                  className="border border-[var(--sap-border)] px-2 py-1 font-mono text-[9px] text-[var(--sap-muted)] transition hover:border-[var(--sap-blue-bright)] hover:text-[var(--sap-text)]"
+                >
+                  ESC
+                </button>
+              </div>
+
+              <div className="p-5">
+                <input
+                  type="text"
+                  value={commandSearch}
+                  onChange={(event) => setCommandSearch(event.target.value)}
+                  placeholder="Search commands or projects..."
+                  autoComplete="off"
+                  className="mt-3 w-full border border-[var(--sap-border)] bg-[var(--sap-bg)] px-3 py-3 font-mono text-[10px] tracking-[0.1em] text-[var(--sap-text)] outline-none placeholder:text-[var(--sap-muted)] focus:border-[var(--sap-blue-bright)]"
+                />
+
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="font-mono text-[9px] tracking-[0.2em] text-[var(--sap-muted)]">
+                    AVAILABLE COMMANDS
+                  </p>
+
+                  <p className="font-mono text-[9px] tracking-[0.15em] text-[var(--sap-blue-bright)]">
+                    {String(filteredCommands.length).padStart(2, "0")} FOUND
+                  </p>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  {filteredCommands.map((command) => (
+                    <button
+                      key={command.action}
+                      onClick={() => {
+                        if (
+                          ["VICA", "PEEKPANEL", "KIVA"].includes(command.action)
+                        ) {
+                          setSelectedProject(command.action);
+                        } else {
+                          setViewMode(command.action.toLowerCase());
+                        }
+
+                        setCommandPaletteOpen(false);
+                        setCommandSearch("");
+                      }}
+                      className={`block w-full border px-3 py-3 text-left font-mono text-[10px] tracking-[0.12em] transition ${
+                        filteredCommands.findIndex(
+                          (item) => item.action === command.action,
+                        ) === commandIndex
+                          ? "border-[var(--sap-blue-bright)] bg-[var(--sap-panel-hover)] text-[var(--sap-blue-bright)]"
+                          : "border-[var(--sap-border)]/50 text-[var(--sap-text)] hover:border-[var(--sap-blue-bright)] hover:bg-[var(--sap-panel-hover)]"
+                      }`}
+                    >
+                      <span className="mr-3 text-[var(--sap-blue-bright)]">
+                        &gt;
+                      </span>
+                      {command.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-[var(--sap-border)]/60 px-4 py-3">
+                <p className="font-mono text-[8px] tracking-[0.15em] text-[var(--sap-muted)]">
+                  SELECT COMMAND // SYSTEM STANDBY
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
