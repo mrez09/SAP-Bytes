@@ -18,13 +18,13 @@ function SignalBoot() {
 
     const timer2 = setTimeout(() => {
       setGlitch(true);
-      setStatus("CHANNEL 01 CONNECTING");
+      setStatus("ARCHIVE CONNECTING");
     }, 1200);
 
     const timer3 = setTimeout(() => {
       setGlitch(false);
       setConnected(true);
-      setStatus("CHANNEL 01 CONNECTED");
+      setStatus("ARCHIVE CONNECTED");
     }, 2000);
 
     /*
@@ -154,7 +154,7 @@ function SignalBoot() {
             <div className="relative border border-blue-400/20 bg-[#07101f]/70 backdrop-blur-sm">
               {/* Top bar */}
               <div className="flex items-center justify-between border-b border-blue-400/20 px-5 py-3 text-[10px] tracking-[0.3em]">
-                <span className="text-blue-300">CHANNEL 01</span>
+                <span className="text-blue-300">SAP NETWORK</span>
 
                 <span className="flex items-center gap-2 text-blue-400">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
@@ -179,7 +179,7 @@ function SignalBoot() {
                   </h1>
 
                   <p className="mt-6 text-xs tracking-[0.4em] text-blue-300">
-                    BROADCAST CHANNEL 01
+                    SOFTWARE ARCHIVE NETWORK
                   </p>
                 </div>
               </div>
@@ -391,7 +391,7 @@ function SignalBoot() {
             </h2>
 
             <p className="mt-5 text-[9px] tracking-[0.35em] text-slate-600">
-              CHANNEL 01 // ARCHIVE FEED
+              ARCHIVE SYSTEM // FEED READY
             </p>
 
             <div className="mx-auto mt-7 flex items-center justify-center gap-1">

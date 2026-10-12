@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Project {
+  id        String   @id
+  name      String   @unique
+  channel   String   @unique
+  category  String
+  type      String
+  status    String
+  subtitle  String
+  overview  String   @db.Text
+  features  String[]
+  tech      String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images ProjectImage[]
+  videos ProjectVideo[]
+
+  @@index([category])
+  @@index([status])
+}
+
+model ProjectImage {
+  id        String   @id @default(cuid())
+  projectId String
+  imageUrl  String   @db.Text
+  altText   String?
+  caption   String?
+  sortOrder Int      @default(0)
+  isCover   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, sortOrder])
+}
+
+model ProjectVideo {
+  id          String   @id @default(cuid())
+  projectId   String
+  videoId     String
+  title       String
+  description String?  @db.Text
+  sortOrder   Int      @default(0)
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, videoId])
+  @@index([projectId, sortOrder])
+}
