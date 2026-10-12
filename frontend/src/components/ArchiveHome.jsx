@@ -4,11 +4,27 @@ import bytesImage from "../assets/bytes.png";
 
 function ArchiveHome() {
   const [broadcastTime, setBroadcastTime] = useState(0);
+
   const [selectedProject, setSelectedProject] = useState("VICA");
   const [switchingProject, setSwitchingProject] = useState(false);
   const [projectSearch, setProjectSearch] = useState("");
   const [detailProject, setDetailProject] = useState(null);
   const featuredArchiveRef = useRef(null);
+
+  const [dbProjects, setDbProjects] = useState(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("sap-bytes-projects-cache") || "[]",
+      );
+    } catch {
+      return [];
+    }
+  });
+  const [projectsLoading, setProjectsLoading] = useState(() => {
+    return !localStorage.getItem("sap-bytes-projects-cache");
+  });
+  const [projectsError, setProjectsError] = useState("");
+
   const [pinnedProjects, setPinnedProjects] = useState(() => {
     const saved = localStorage.getItem("sap-bytes-pinned-projects");
 
@@ -39,73 +55,21 @@ function ArchiveHome() {
     );
   }, [pinnedProjects]);
 
-  const projects = [
-    {
-      id: "01",
-      name: "VICA",
-      type: "LOCAL VOICE STUDIO",
-      status: "ONLINE",
-      videoId: "N1y9ilJzp7s",
-      subtitle: "LOCAL VOICE SYNTHESIS STUDIO",
-      overview:
-        "VICA is a local voice studio for Indonesian text-to-speech and voice cloning, built to explore AI-powered voice generation on a personal computer.",
-      description: "Local Indonesian voice synthesis and cloning studio.",
+  const projects = dbProjects.map((project) => ({
+    ...project,
+    videoId:
+      project.videos?.find((video) => video.isFeatured)?.videoId ||
+      project.videos?.[0]?.videoId ||
+      "",
+    description: project.overview,
+    tech: project.tech ?? [],
+    features: project.features ?? [],
+  }));
 
-      features: [
-        "Voice cloning",
-        "Text-to-speech",
-        "Voice library",
-        "Audio generation",
-        "Playback controls",
-      ],
-
-      tech: ["React", "FastAPI", "F5-TTS", "FFmpeg"],
-    },
-    {
-      id: "02",
-      name: "PEEKPANEL",
-      type: "UTILITY SYSTEM",
-      status: "ONLINE",
-      videoId: "2ynnUYg5On0",
-      subtitle: "INTERACTIVE OVERLAY UTILITY",
-      overview:
-        "PeekPanel is a utility system for organizing game walkthroughs and live coding overlays, with a Go backend and PostgreSQL database.",
-      description:
-        "Overlay archive system for live coding and game walkthroughs.",
-      features: [
-        "Product catalog",
-        "Order request",
-        "Inventory management",
-        "Admin order status",
-        "MOQ validation",
-      ],
-      tech: ["Go", "React", "GORM", "PostgreSQL", "Neon"],
-    },
-    {
-      id: "03",
-      name: "KIVA",
-      type: "VISUAL EXPERIMENT",
-      status: "ON HOLD",
-      videoId: "JE8hZ3BznXU",
-      subtitle: "LOCAL AI IMAGE EXPERIMENT",
-      overview:
-        "KIVA is a local AI image generation project built to explore diffusion models, prompt experimentation, and image generation workflows.",
-      description: "Local image generation and visual experimentation project.",
-      features: [
-        "Local image generation",
-        "Prompt experimentation",
-        "Diffusion model testing",
-        "Image workflow exploration",
-      ],
-
-      tech: ["Python", "Diffusers", "Stable Diffusion", "Hugging Face"],
-    },
-  ];
-
-  const activeProject = projects.find(
-    (project) => project.name === selectedProject,
-  );
-
+  const activeProject =
+    projects.find((project) => project.name === selectedProject) ??
+    projects[0] ??
+    null;
   const filteredProjects = projects.filter((project) => {
     const search = projectSearch.toLowerCase().trim();
 
@@ -215,6 +179,52 @@ function ArchiveHome() {
     };
   }, [commandPaletteOpen, commandSearch, commandIndex, filteredCommands]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchProjects() {
+      try {
+        setProjectsLoading(true);
+        setProjectsError("");
+
+        const response = await fetch("/api/projects");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch projects");
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.message || "Failed to fetch projects");
+        }
+
+        if (!cancelled) {
+          setDbProjects(result.data);
+
+          localStorage.setItem(
+            "sap-bytes-projects-cache",
+            JSON.stringify(result.data),
+          );
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setProjectsError(error.message);
+        }
+      } finally {
+        if (!cancelled) {
+          setProjectsLoading(false);
+        }
+      }
+    }
+
+    fetchProjects();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[var(--sap-bg)] text-white">
       {/* Background grid */}
@@ -243,7 +253,7 @@ function ArchiveHome() {
               <div className="hidden h-7 w-px bg-[var(--sap-blue)]/20 md:block" />
 
               <span className="hidden text-[9px] tracking-[0.3em] text-[var(--sap-blue-bright)] md:block">
-                CHANNEL {activeProject.id}
+                CHANNEL {activeProject?.id}
               </span>
             </div>
 
@@ -280,7 +290,7 @@ function ArchiveHome() {
               </p>
 
               <h1 className="mt-3 text-3xl font-semibold tracking-[0.12em] md:text-5xl">
-                CHANNEL {activeProject.id}
+                CHANNEL {activeProject?.id}
               </h1>
 
               <p className="mt-3 max-w-xl text-xs leading-relaxed tracking-[0.12em] text-slate-500">
@@ -326,7 +336,7 @@ function ArchiveHome() {
                           : "translate-x-0 opacity-100"
                       } text-[var(--sap-muted)]`}
                     >
-                      ARCHIVE_{activeProject.id} // VIDEO SHOWCASE
+                      ARCHIVE_{activeProject?.id} // VIDEO SHOWCASE
                     </p>
                   </div>
 
@@ -359,7 +369,7 @@ function ArchiveHome() {
                   </div>
 
                   <div className="flex items-center gap-4 font-mono text-[7px] tracking-[0.2em] text-[var(--sap-muted)]">
-                    <span>CH.{activeProject.id}</span>
+                    <span>CH.{activeProject?.id}</span>
 
                     <span className="hidden sm:inline">SIGNAL: STABLE</span>
                   </div>
@@ -374,9 +384,9 @@ function ArchiveHome() {
                     {activeProject?.videoId ? (
                       <div className="h-full w-full">
                         <YouTubeArchivePlayer
-                          key={activeProject.videoId}
-                          videoId={activeProject.videoId}
-                          projectName={activeProject.name}
+                          key={activeProject?.videoId}
+                          videoId={activeProject?.videoId}
+                          projectName={activeProject?.name}
                         />
                         {switchingProject && (
                           <div className="absolute inset-0 z-30 flex items-center justify-center bg-[var(--sap-bg)]/95 backdrop-blur-sm">
@@ -447,16 +457,16 @@ function ArchiveHome() {
                   <div className="flex items-center justify-between gap-4 px-4 py-3">
                     <div className="min-w-0">
                       <p className="font-mono text-[10px] tracking-[0.25em] text-[var(--sap-text)]">
-                        {activeProject.name}
+                        {activeProject?.name}
                       </p>
 
                       <p className="mt-1 font-mono text-[7px] tracking-[0.25em] text-[var(--sap-blue-bright)]">
-                        {activeProject.subtitle}
+                        {activeProject?.subtitle}
                       </p>
                     </div>
 
                     <span className="shrink-0 font-mono text-[7px] tracking-[0.2em] text-[var(--sap-muted)]">
-                      CH.{activeProject.id}
+                      CH.{activeProject?.id}
                     </span>
                   </div>
                 </div>
@@ -680,7 +690,7 @@ function ArchiveHome() {
                 ) : (
                   sortedProjects.map((project) => (
                     <div
-                      key={project.id} //button
+                      key={project?.id} //button
                       onClick={() => {
                         if (project.name === selectedProject) return;
 
@@ -745,7 +755,7 @@ function ArchiveHome() {
 
                         <div className="flex items-center gap-3">
                           <span className="font-mono text-[9px] tracking-[0.25em] text-[var(--sap-blue-bright)]">
-                            CH. {project.id}
+                            CH. {project?.id}
                           </span>
 
                           <span className="h-px w-8 bg-[var(--sap-border)]" />
@@ -760,7 +770,7 @@ function ArchiveHome() {
 
                       <div className="flex items-start justify-between">
                         <span className="text-[8px] tracking-[0.25em] text-[var(--sap-muted)]">
-                          PROJECT_{project.id}
+                          PROJECT_{project?.id}
                         </span>
 
                         <span className="text-[8px] tracking-[0.2em] text-blue-400/70">
@@ -818,7 +828,7 @@ function ArchiveHome() {
               <div className="border border-[var(--sap-border)]/60 bg-[var(--sap-panel)]/40">
                 {sortedProjects.map((project) => (
                   <button
-                    key={project.id}
+                    key={project?.id}
                     type="button"
                     onClick={() => {
                       if (project.name === selectedProject) return;
@@ -849,7 +859,7 @@ function ArchiveHome() {
                     <div className="w-16 shrink-0">
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-[8px] tracking-[0.2em] text-[var(--sap-blue-bright)]">
-                          CH.{project.id}
+                          CH.{project?.id}
                         </span>
 
                         {pinnedProjects.includes(project.name) && (
@@ -882,7 +892,7 @@ function ArchiveHome() {
                     {/* PROJECT */}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-mono text-[10px] tracking-[0.2em] text-[var(--sap-text)]">
-                        {project.name}
+                        {project?.name}
                       </p>
 
                       <p className="mt-1 truncate font-mono text-[7px] tracking-[0.2em] text-[var(--sap-muted)]">
@@ -924,7 +934,7 @@ function ArchiveHome() {
                       </p>
 
                       <h2 className="mt-2 font-mono text-lg tracking-[0.2em] text-[var(--sap-text)]">
-                        {detailProject.name}
+                        {detailProject?.name}
                       </h2>
                     </div>
 
@@ -1008,7 +1018,7 @@ function ArchiveHome() {
                       </span>
 
                       <span className="font-mono text-[8px] tracking-[0.2em] text-[var(--sap-text)]">
-                        CH.{detailProject.id}
+                        CH.{detailProject?.id}
                       </span>
                     </div>
                     <div className="mt-7 border-t border-[var(--sap-border)]/60 pt-5">
