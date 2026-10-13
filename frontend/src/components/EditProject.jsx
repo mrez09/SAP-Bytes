@@ -1,7 +1,42 @@
 import { useEffect, useState } from "react";
 
+function getYouTubeVideoId(url) {
+  try {
+    const parsedUrl = new URL(url);
+    let videoId = "";
+
+    if (parsedUrl.hostname === "youtu.be") {
+      videoId = parsedUrl.pathname.slice(1).split("/")[0];
+    } else if (
+      [
+        "youtube.com",
+        "www.youtube.com",
+        "m.youtube.com",
+        "youtube-nocookie.com",
+        "www.youtube-nocookie.com",
+      ].includes(parsedUrl.hostname)
+    ) {
+      if (parsedUrl.pathname === "/watch") {
+        videoId = parsedUrl.searchParams.get("v") || "";
+      } else {
+        const match = parsedUrl.pathname.match(
+          /^\/(?:embed|shorts|live)\/([^/?]+)/,
+        );
+
+        videoId = match?.[1] || "";
+      }
+    }
+
+    return /^[a-zA-Z0-9_-]{11}$/.test(videoId) ? videoId : "";
+  } catch {
+    return "";
+  }
+}
+
 function EditProject() {
   const [project, setProject] = useState(null);
+
+  const previewVideoId = getYouTubeVideoId(project?.videoUrl ?? "");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -31,16 +66,27 @@ function EditProject() {
         }
 
         const found = result.data.find((item) => item.id === projectId);
+        console.log("Project ID:", projectId);
+        console.log("Found project:", found);
 
         if (!found) {
           throw new Error("Project not found");
         }
 
         if (!cancelled) {
+          //old
+          //const mainVideo =
+          //found.videos?.find((video) => video.isFeatured) ??
+          //found.videos?.[0];
+          const mainVideo = found.videos?.find((video) => video.isFeatured);
+
           setProject({
             ...found,
             features: (found.features ?? []).join(", "),
             tech: (found.tech ?? []).join(", "),
+            videoUrl: mainVideo?.videoId
+              ? `https://www.youtube.com/watch?v=${mainVideo.videoId}`
+              : "",
           });
         }
       } catch (err) {
@@ -95,6 +141,7 @@ function EditProject() {
             status: project.status,
             subtitle: project.subtitle,
             overview: project.overview,
+            videoUrl: project.videoUrl,
             features: project.features
               .split(",")
               .map((item) => item.trim())
@@ -218,6 +265,42 @@ function EditProject() {
                 />
               </label>
             ))}
+
+            <label className="block text-sm text-slate-300 sm:col-span-2">
+              YouTube Video URL
+              <input
+                name="videoUrl"
+                type="url"
+                value={project?.videoUrl ?? ""}
+                onChange={handleChange}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="mt-2 w-full rounded-lg border border-slate-700 bg-[#080D18] px-3 py-3 text-white outline-none transition focus:border-cyan-500"
+              />
+              <span className="mt-2 block text-xs text-slate-500">
+                Optional. Update the main YouTube video for this project.
+              </span>
+            </label>
+
+            {previewVideoId && (
+              <div className="sm:col-span-2">
+                <p className="mb-2 text-sm text-slate-300">Video Preview</p>
+
+                <div className="overflow-hidden rounded-xl border border-slate-700 bg-[#080D18]">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${previewVideoId}`}
+                    title="YouTube Video Preview"
+                    className="aspect-video w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  Check the video above before saving your changes.
+                </p>
+              </div>
+            )}
           </div>
 
           {error && (

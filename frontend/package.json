@@ -11,6 +11,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@imagekit/javascript": "^5.5.1",
+    "@imagekit/nodejs": "^7.12.1",
     "@neondatabase/serverless": "^1.2.0",
     "@prisma/adapter-neon": "^7.10.0",
     "@prisma/client": "^7.10.0",

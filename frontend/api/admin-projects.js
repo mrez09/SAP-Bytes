@@ -99,6 +99,7 @@ export default async function handler(req, res) {
       features,
       tech,
       videoUrl,
+      images,
     } = req.body ?? {};
 
     const requiredFields = {
@@ -158,6 +159,74 @@ export default async function handler(req, res) {
       });
     }
 
+    // Gallery
+    let validImages = [];
+
+    if (Array.isArray(images)) {
+      for (const image of images) {
+        if (
+          !image ||
+          typeof image !== "object" ||
+          typeof image.imageUrl !== "string" ||
+          !image.imageUrl.trim()
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "Each image must have a valid image URL.",
+          });
+        }
+
+        let parsedUrl;
+
+        try {
+          parsedUrl = new URL(image.imageUrl.trim());
+        } catch {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid image URL.",
+          });
+        }
+
+        if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+          return res.status(400).json({
+            success: false,
+            message: "Image URL must use HTTP or HTTPS.",
+          });
+        }
+
+        if (
+          (image.caption !== undefined && typeof image.caption !== "string") ||
+          (image.altText !== undefined && typeof image.altText !== "string") ||
+          (image.isCover !== undefined && typeof image.isCover !== "boolean")
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid image metadata.",
+          });
+        }
+
+        validImages.push({
+          imageUrl: parsedUrl.href,
+          caption: image.caption?.trim() || null,
+          altText: image.altText?.trim() || null,
+          isCover: image.isCover === true,
+        });
+      }
+    }
+
+    if (validImages.filter((image) => image.isCover).length > 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Only one image can be selected as cover.",
+      });
+    }
+
+    if (validImages.length > 0 && !validImages.some((image) => image.isCover)) {
+      validImages[0].isCover = true;
+    }
+
+    //Prisma
+
     try {
       const project = await prisma.project.create({
         data: {
@@ -184,6 +253,19 @@ export default async function handler(req, res) {
                 ],
               }
             : undefined,
+          images:
+            validImages.length > 0
+              ? {
+                  create: validImages.map((image, index) => ({
+                    imageUrl: image.imageUrl,
+                    altText:
+                      image.altText || `${name.trim()} screenshot ${index + 1}`,
+                    caption: image.caption,
+                    sortOrder: index,
+                    isCover: image.isCover,
+                  })),
+                }
+              : undefined,
         },
       });
 
@@ -199,6 +281,8 @@ export default async function handler(req, res) {
           message: "Project ID, name, or channel already exists",
         });
       }
+
+      console.error("Failed to create project:", error);
 
       console.error("Failed to create project:", error);
 
@@ -229,6 +313,7 @@ export default async function handler(req, res) {
       overview,
       features,
       tech,
+      videoUrl,
     } = req.body ?? {};
 
     const requiredFields = {
@@ -249,6 +334,21 @@ export default async function handler(req, res) {
       return res.status(400).json({
         success: false,
         message: `Field "${missingField[0]}" is required`,
+      });
+    }
+
+    const videoId =
+      typeof videoUrl === "string" && videoUrl.trim()
+        ? getYouTubeVideoId(videoUrl)
+        : null;
+
+    if (
+      videoUrl !== undefined &&
+      (typeof videoUrl !== "string" || (videoUrl.trim() && !videoId))
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid YouTube video URL.",
       });
     }
 
@@ -281,6 +381,43 @@ export default async function handler(req, res) {
           tech: tech ?? [],
         },
       });
+
+      if (videoUrl !== undefined) {
+        await prisma.projectVideo.updateMany({
+          where: {
+            projectId: id,
+            isFeatured: true,
+          },
+          data: {
+            isFeatured: false,
+          },
+        });
+
+        if (videoId) {
+          await prisma.projectVideo.upsert({
+            where: {
+              projectId_videoId: {
+                projectId: id,
+                videoId,
+              },
+            },
+            update: {
+              title: name.trim(),
+              description: subtitle.trim() || null,
+              sortOrder: 0,
+              isFeatured: true,
+            },
+            create: {
+              projectId: id,
+              videoId,
+              title: name.trim(),
+              description: subtitle.trim() || null,
+              sortOrder: 0,
+              isFeatured: true,
+            },
+          });
+        }
+      }
 
       return res.status(200).json({
         success: true,

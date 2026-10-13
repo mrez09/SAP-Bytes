@@ -82,6 +82,8 @@ function ArchiveHome() {
     );
   });
 
+  const activeCover = activeProject?.images?.find((image) => image.isCover);
+
   const sortedProjects = [...filteredProjects].sort((a, b) => {
     const aPinned = pinnedProjects.includes(a.name);
     const bPinned = pinnedProjects.includes(b.name);
@@ -412,6 +414,16 @@ function ArchiveHome() {
                           </div>
                         )}
                       </div>
+                    ) : activeCover?.imageUrl ? (
+                      <img
+                        src={activeCover.imageUrl}
+                        alt={
+                          activeCover.altText ||
+                          activeProject?.name ||
+                          "Project cover"
+                        }
+                        className="h-full w-full object-contain"
+                      />
                     ) : (
                       <div className="flex h-full items-center justify-center">
                         <div className="text-center">
