@@ -195,8 +195,8 @@ export default async function handler(req, res) {
         }
 
         if (
-          (image.caption !== undefined && typeof image.caption !== "string") ||
-          (image.altText !== undefined && typeof image.altText !== "string") ||
+          (image.caption != null && typeof image.caption !== "string") ||
+          (image.altText != null && typeof image.altText !== "string") ||
           (image.isCover !== undefined && typeof image.isCover !== "boolean")
         ) {
           return res.status(400).json({
@@ -314,6 +314,7 @@ export default async function handler(req, res) {
       features,
       tech,
       videoUrl,
+      images,
     } = req.body ?? {};
 
     const requiredFields = {
@@ -366,6 +367,84 @@ export default async function handler(req, res) {
       });
     }
 
+    // Validate project images
+    let validImages;
+
+    if (images !== undefined) {
+      if (!Array.isArray(images)) {
+        return res.status(400).json({
+          success: false,
+          message: "Images must be an array.",
+        });
+      }
+
+      validImages = [];
+
+      for (const image of images) {
+        if (
+          !image ||
+          typeof image !== "object" ||
+          typeof image.imageUrl !== "string" ||
+          !image.imageUrl.trim()
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "Each image must have a valid image URL.",
+          });
+        }
+
+        let parsedUrl;
+
+        try {
+          parsedUrl = new URL(image.imageUrl.trim());
+        } catch {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid image URL.",
+          });
+        }
+
+        if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+          return res.status(400).json({
+            success: false,
+            message: "Image URL must use HTTP or HTTPS.",
+          });
+        }
+
+        if (
+          (image.caption != null && typeof image.caption !== "string") ||
+          (image.altText != null && typeof image.altText !== "string") ||
+          (image.isCover !== undefined && typeof image.isCover !== "boolean")
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid image metadata.",
+          });
+        }
+
+        validImages.push({
+          imageUrl: parsedUrl.href,
+          caption: image.caption?.trim() || null,
+          altText: image.altText?.trim() || null,
+          isCover: image.isCover === true,
+        });
+      }
+
+      if (validImages.filter((image) => image.isCover).length > 1) {
+        return res.status(400).json({
+          success: false,
+          message: "Only one image can be selected as cover.",
+        });
+      }
+
+      if (
+        validImages.length > 0 &&
+        !validImages.some((image) => image.isCover)
+      ) {
+        validImages[0].isCover = true;
+      }
+    }
+
     try {
       const project = await prisma.project.update({
         where: { id },
@@ -381,6 +460,31 @@ export default async function handler(req, res) {
           tech: tech ?? [],
         },
       });
+
+      //Validasi Images
+      if (validImages !== undefined) {
+        await prisma.$transaction(async (tx) => {
+          await tx.projectImage.deleteMany({
+            where: { projectId: id },
+          });
+
+          if (validImages.length > 0) {
+            await tx.projectImage.createMany({
+              data: validImages.map((image, index) => ({
+                projectId: id,
+                imageUrl: image.imageUrl,
+                altText:
+                  image.altText || `${name.trim()} screenshot ${index + 1}`,
+                caption: image.caption,
+                sortOrder: index,
+                isCover: image.isCover,
+              })),
+            });
+          }
+        });
+      }
+
+      //validasi Video
 
       if (videoUrl !== undefined) {
         await prisma.projectVideo.updateMany({

@@ -7,3 +7,7 @@ dist/
 # Local Neon CLI configuration
 .neon
 .vercel
+
+# Local Neon Agent Skills
+/.agents/
+/skills-lock.json

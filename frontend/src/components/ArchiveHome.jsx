@@ -685,6 +685,7 @@ function ArchiveHome() {
               </div>
             </div>
 
+            {/**Search */}
             {viewMode === "grid" ? (
               <div className="grid gap-4 md:grid-cols-3">
                 {filteredProjects.length === 0 ? (
@@ -972,6 +973,60 @@ function ArchiveHome() {
                       <p className="mt-3 text-[9px] leading-6 tracking-[0.05em] text-[var(--sap-muted)]">
                         {detailProject.overview}
                       </p>
+
+                      {detailProject.images?.length > 0 && (
+                        <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
+                          <div className="flex items-center justify-between">
+                            <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
+                              PROJECT GALLERY
+                            </p>
+
+                            <span className="font-mono text-[7px] tracking-[0.2em] text-[var(--sap-muted)]">
+                              {String(detailProject.images.length).padStart(
+                                2,
+                                "0",
+                              )}{" "}
+                              IMAGES
+                            </span>
+                          </div>
+
+                          <div className="mt-4 grid grid-cols-2 gap-3">
+                            {[...detailProject.images]
+                              .sort((a, b) => a.sortOrder - b.sortOrder)
+                              .map((image) => (
+                                <div
+                                  key={image.id}
+                                  className={`overflow-hidden border bg-[var(--sap-bg)] ${
+                                    image.isCover
+                                      ? "border-[var(--sap-blue-bright)]/60"
+                                      : "border-[var(--sap-border)]/50"
+                                  }`}
+                                >
+                                  <img
+                                    src={image.imageUrl}
+                                    alt={image.altText || detailProject.name}
+                                    loading="lazy"
+                                    className="aspect-video w-full object-contain"
+                                  />
+
+                                  <div className="p-2">
+                                    {image.isCover && (
+                                      <p className="mb-1 font-mono text-[7px] tracking-[0.15em] text-[var(--sap-blue-bright)]">
+                                        COVER IMAGE
+                                      </p>
+                                    )}
+
+                                    {image.caption && (
+                                      <p className="break-words font-mono text-[8px] leading-4 text-[var(--sap-muted)]">
+                                        {image.caption}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
