@@ -9,6 +9,7 @@ function ArchiveHome() {
   const [switchingProject, setSwitchingProject] = useState(false);
   const [projectSearch, setProjectSearch] = useState("");
   const [detailProject, setDetailProject] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const featuredArchiveRef = useRef(null);
 
   const [dbProjects, setDbProjects] = useState(() => {
@@ -104,6 +105,26 @@ function ArchiveHome() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  useEffect(() => {
+    if (!selectedImage && !detailProject) return;
+
+    function handleKeyDown(event) {
+      if (event.key !== "Escape") return;
+
+      if (selectedImage) {
+        setSelectedImage(null);
+      } else {
+        setDetailProject(null);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedImage, detailProject]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -933,13 +954,13 @@ function ArchiveHome() {
 
             {/**Detail */}
             {detailProject && (
-              <div className="fixed inset-0 z-50 flex justify-end">
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
                 <div
                   className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                   onClick={() => setDetailProject(null)}
                 />
 
-                <div className="sap-scrollbar relative h-full w-full max-w-md overflow-y-auto overscroll-contain border-l border-[var(--sap-border)] bg-[var(--sap-panel)] p-6 shadow-[-20px_0_60px_rgba(0,0,0,0.35)]">
+                <div className="sap-scrollbar relative h-full max-h-[90vh] w-full max-w-5xl overflow-y-auto overscroll-contain rounded-xl border border-[var(--sap-border)] bg-[var(--sap-panel)] p-5 shadow-2xl sm:p-8">
                   <div className="flex items-center justify-between border-b border-[var(--sap-border)]/60 pb-4">
                     <div>
                       <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-muted)]">
@@ -973,99 +994,173 @@ function ArchiveHome() {
                       <p className="mt-3 text-[9px] leading-6 tracking-[0.05em] text-[var(--sap-muted)]">
                         {detailProject.overview}
                       </p>
-
-                      {detailProject.images?.length > 0 && (
-                        <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
-                          <div className="flex items-center justify-between">
-                            <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
-                              PROJECT GALLERY
-                            </p>
-
-                            <span className="font-mono text-[7px] tracking-[0.2em] text-[var(--sap-muted)]">
-                              {String(detailProject.images.length).padStart(
-                                2,
-                                "0",
-                              )}{" "}
-                              IMAGES
-                            </span>
-                          </div>
-
-                          <div className="mt-4 grid grid-cols-2 gap-3">
-                            {[...detailProject.images]
-                              .sort((a, b) => a.sortOrder - b.sortOrder)
-                              .map((image) => (
-                                <div
-                                  key={image.id}
-                                  className={`overflow-hidden border bg-[var(--sap-bg)] ${
-                                    image.isCover
-                                      ? "border-[var(--sap-blue-bright)]/60"
-                                      : "border-[var(--sap-border)]/50"
-                                  }`}
-                                >
-                                  <img
-                                    src={image.imageUrl}
-                                    alt={image.altText || detailProject.name}
-                                    loading="lazy"
-                                    className="aspect-video w-full object-contain"
-                                  />
-
-                                  <div className="p-2">
-                                    {image.isCover && (
-                                      <p className="mb-1 font-mono text-[7px] tracking-[0.15em] text-[var(--sap-blue-bright)]">
-                                        COVER IMAGE
-                                      </p>
-                                    )}
-
-                                    {image.caption && (
-                                      <p className="break-words font-mono text-[8px] leading-4 text-[var(--sap-muted)]">
-                                        {image.caption}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
 
-                    <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
-                      <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
-                        FEATURES
-                      </p>
+                    <div className="mt-7 grid grid-cols-1 gap-8 lg:grid-cols-2">
+                      <div className="min-w-0">
+                        {detailProject.images?.length > 0 && ( //abv
+                          <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
+                            <div className="flex items-center justify-between">
+                              <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
+                                PROJECT GALLERY
+                              </p>
 
-                      <div className="mt-4 space-y-2">
-                        {detailProject.features.map((feature) => (
-                          <div
-                            key={feature}
-                            className="flex items-center gap-3"
-                          >
-                            <span className="h-px w-3 bg-[var(--sap-blue-bright)]/60" />
+                              <span className="font-mono text-[7px] tracking-[0.2em] text-[var(--sap-muted)]">
+                                {String(detailProject.images.length).padStart(
+                                  2,
+                                  "0",
+                                )}{" "}
+                                IMAGES
+                              </span>
+                            </div>
 
-                            <span className="font-mono text-[8px] tracking-[0.08em] text-[var(--sap-muted)]">
-                              {feature}
-                            </span>
+                            <div className="mt-4 grid grid-cols-2 gap-3">
+                              {[...detailProject.images]
+                                .sort((a, b) => a.sortOrder - b.sortOrder)
+                                .map((image) => (
+                                  <div
+                                    key={image.id}
+                                    className={`overflow-hidden border bg-[var(--sap-bg)] ${
+                                      image.isCover
+                                        ? "border-[var(--sap-blue-bright)]/60"
+                                        : "border-[var(--sap-border)]/50"
+                                    }`}
+                                  >
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedImage(image)}
+                                      aria-label={`View image: ${image.caption || image.altText || detailProject.name}`}
+                                      className="block w-full cursor-zoom-in bg-[var(--sap-bg)]"
+                                    >
+                                      <img
+                                        src={image.imageUrl}
+                                        alt={
+                                          image.altText || detailProject.name
+                                        }
+                                        loading="lazy"
+                                        className="aspect-video w-full object-contain transition duration-300 hover:scale-[1.02]"
+                                      />
+                                    </button>
+
+                                    <div className="p-2">
+                                      {image.isCover && (
+                                        <p className="mb-1 font-mono text-[7px] tracking-[0.15em] text-[var(--sap-blue-bright)]">
+                                          COVER IMAGE
+                                        </p>
+                                      )}
+
+                                      {image.caption && (
+                                        <p className="break-words font-mono text-[8px] leading-4 text-[var(--sap-muted)]">
+                                          {image.caption}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                            </div>
                           </div>
-                        ))}
+                        )}
                       </div>
 
                       <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
                         <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
-                          TECHNOLOGY bro
+                          FEATURES
                         </p>
 
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {detailProject.tech.map((technology) => (
-                            <span
-                              key={technology}
-                              className="border border-[var(--sap-border)]/60 bg-[var(--sap-bg)]/40 px-3 py-2 font-mono text-[7px] tracking-[0.12em] text-[var(--sap-muted)]"
+                        <div className="mt-4 space-y-2">
+                          {detailProject.features.map((feature) => (
+                            <div
+                              key={feature}
+                              className="flex items-center gap-3"
                             >
-                              {technology}
-                            </span>
+                              <span className="h-px w-3 bg-[var(--sap-blue-bright)]/60" />
+
+                              <span className="font-mono text-[8px] tracking-[0.08em] text-[var(--sap-muted)]">
+                                {feature}
+                              </span>
+                            </div>
                           ))}
+                        </div>
+
+                        <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
+                          <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
+                            TECHNOLOGY
+                          </p>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {detailProject.tech.map((technology) => (
+                              <span
+                                key={technology}
+                                className="border border-[var(--sap-border)]/60 bg-[var(--sap-bg)]/40 px-3 py-2 font-mono text-[7px] tracking-[0.12em] text-[var(--sap-muted)]"
+                              >
+                                {technology}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
+
+                    {/* Fullscreen Image Viewer */}
+                    {selectedImage && (
+                      <div
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm sm:p-8"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Fullscreen image viewer"
+                      >
+                        {/* Backdrop */}
+                        <button
+                          type="button"
+                          aria-label="Close image viewer"
+                          onClick={() => setSelectedImage(null)}
+                          className="absolute inset-0 h-full w-full cursor-default"
+                        />
+
+                        {/* Viewer Content */}
+                        <div className="relative z-10 flex max-h-full w-full max-w-7xl flex-col items-center">
+                          {/* Close Button */}
+                          <div className="mb-4 flex w-full items-center justify-between">
+                            <div className="min-w-0 pr-4">
+                              <p className="font-mono text-[9px] tracking-[0.3em] text-cyan-400">
+                                SAP_BYTES / IMAGE VIEWER
+                              </p>
+
+                              <p className="mt-1 truncate text-sm text-white">
+                                {selectedImage.caption ||
+                                  selectedImage.altText ||
+                                  "Project Image"}
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setSelectedImage(null)}
+                              aria-label="Close image viewer"
+                              className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/20 text-xl text-white transition hover:border-cyan-400 hover:bg-cyan-400/10 hover:text-cyan-400"
+                            >
+                              ×
+                            </button>
+                          </div>
+
+                          {/* Large Image */}
+                          <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden">
+                            <img
+                              src={selectedImage.imageUrl}
+                              alt={selectedImage.altText || "Project image"}
+                              className="max-h-[80vh] max-w-full object-contain"
+                            />
+                          </div>
+
+                          {/* Image Caption */}
+                          {selectedImage.caption && (
+                            <p className="mt-4 max-w-3xl text-center text-xs leading-6 text-slate-300">
+                              {selectedImage.caption}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-8 border-t border-[var(--sap-border)]/40 pt-5">
