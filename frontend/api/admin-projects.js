@@ -312,6 +312,7 @@ export default async function handler(req, res) {
       subtitle,
       overview,
       features,
+      sortOrder,
       tech,
       videoUrl,
       images,
@@ -364,6 +365,16 @@ export default async function handler(req, res) {
       return res.status(400).json({
         success: false,
         message: "Features and tech must be arrays of strings",
+      });
+    }
+
+    if (
+      sortOrder !== undefined &&
+      (!Number.isInteger(sortOrder) || sortOrder < 0)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "sortOrder must be a non-negative integer.",
       });
     }
 
@@ -458,6 +469,7 @@ export default async function handler(req, res) {
           overview: overview.trim(),
           features: features ?? [],
           tech: tech ?? [],
+          ...(sortOrder !== undefined ? { sortOrder } : {}),
         },
       });
 

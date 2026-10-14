@@ -14,9 +14,7 @@ export default async function handler(req, res) {
         images: true,
         videos: true,
       },
-      orderBy: {
-        id: "asc",
-      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     });
 
     res.setHeader(

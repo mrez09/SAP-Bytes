@@ -10,6 +10,7 @@ function ArchiveHome() {
   const [projectSearch, setProjectSearch] = useState("");
   const [detailProject, setDetailProject] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [activeGalleryImageId, setActiveGalleryImageId] = useState(null);
   const featuredArchiveRef = useRef(null);
 
   const [dbProjects, setDbProjects] = useState(() => {
@@ -89,7 +90,22 @@ function ArchiveHome() {
     const aPinned = pinnedProjects.includes(a.name);
     const bPinned = pinnedProjects.includes(b.name);
 
-    return Number(bPinned) - Number(aPinned);
+    // Pinned projects remain at the top.
+    const pinnedDifference = Number(bPinned) - Number(aPinned);
+
+    if (pinnedDifference !== 0) {
+      return pinnedDifference;
+    }
+
+    // Lower sortOrder values appear first.
+    const orderDifference = (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+
+    if (orderDifference !== 0) {
+      return orderDifference;
+    }
+
+    // Tie-breaker: newest project first.
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   useEffect(() => {
@@ -247,6 +263,16 @@ function ArchiveHome() {
       cancelled = true;
     };
   }, []);
+
+  const galleryImages = [...(detailProject?.images ?? [])].sort(
+    (a, b) => a.sortOrder - b.sortOrder,
+  );
+
+  const activeGalleryImage =
+    galleryImages.find((image) => image.id === activeGalleryImageId) ||
+    galleryImages.find((image) => image.isCover) ||
+    galleryImages[0] ||
+    null;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[var(--sap-bg)] text-white">
@@ -998,65 +1024,124 @@ function ArchiveHome() {
 
                     <div className="mt-7 grid grid-cols-1 gap-8 lg:grid-cols-2">
                       <div className="min-w-0">
-                        {detailProject.images?.length > 0 && ( //abv
+                        {galleryImages.length > 0 && (
                           <div className="mt-7 border-t border-[var(--sap-border)]/40 pt-5">
+                            {/* Gallery Header */}
                             <div className="flex items-center justify-between">
                               <p className="font-mono text-[7px] tracking-[0.3em] text-[var(--sap-blue-bright)]">
                                 PROJECT GALLERY
                               </p>
 
                               <span className="font-mono text-[7px] tracking-[0.2em] text-[var(--sap-muted)]">
-                                {String(detailProject.images.length).padStart(
-                                  2,
-                                  "0",
-                                )}{" "}
-                                IMAGES
+                                {String(
+                                  galleryImages.findIndex(
+                                    (image) =>
+                                      image.id === activeGalleryImage?.id,
+                                  ) + 1,
+                                ).padStart(2, "0")}{" "}
+                                /{" "}
+                                {String(galleryImages.length).padStart(2, "0")}
                               </span>
                             </div>
 
-                            <div className="mt-4 grid grid-cols-2 gap-3">
-                              {[...detailProject.images]
-                                .sort((a, b) => a.sortOrder - b.sortOrder)
-                                .map((image) => (
-                                  <div
-                                    key={image.id}
-                                    className={`overflow-hidden border bg-[var(--sap-bg)] ${
-                                      image.isCover
-                                        ? "border-[var(--sap-blue-bright)]/60"
-                                        : "border-[var(--sap-border)]/50"
-                                    }`}
-                                  >
+                            {/* Main Active Image */}
+                            {activeGalleryImage && (
+                              <div className="mt-4 overflow-hidden border border-[var(--sap-border)]/50 bg-[var(--sap-bg)]">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setSelectedImage(activeGalleryImage)
+                                  }
+                                  aria-label={`View fullscreen: ${
+                                    activeGalleryImage.caption ||
+                                    activeGalleryImage.altText ||
+                                    detailProject.name
+                                  }`}
+                                  className="group relative block w-full cursor-zoom-in"
+                                >
+                                  <img
+                                    src={activeGalleryImage.imageUrl}
+                                    alt={
+                                      activeGalleryImage.altText ||
+                                      detailProject.name
+                                    }
+                                    className="aspect-video w-full object-contain transition duration-300 group-hover:scale-[1.01]"
+                                  />
+
+                                  <span className="absolute bottom-3 right-3 border border-white/20 bg-black/70 px-2 py-1 font-mono text-[8px] tracking-widest text-white opacity-0 transition group-hover:opacity-100">
+                                    EXPAND ↗
+                                  </span>
+                                </button>
+
+                                <div className="flex min-h-9 items-center justify-between gap-3 border-t border-[var(--sap-border)]/40 px-3 py-2">
+                                  <p className="min-w-0 break-words font-mono text-[8px] leading-4 text-[var(--sap-muted)]">
+                                    {activeGalleryImage.caption ||
+                                      activeGalleryImage.altText ||
+                                      detailProject.name}
+                                  </p>
+
+                                  {activeGalleryImage.isCover && (
+                                    <span className="shrink-0 font-mono text-[7px] tracking-wider text-[var(--sap-blue-bright)]">
+                                      COVER
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Scrollable Thumbnail Strip */}
+                            <div className="relative mt-4">
+                              <div
+                                className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-3"
+                                aria-label="Project gallery thumbnails"
+                              >
+                                {galleryImages.map((image, index) => {
+                                  const isActive =
+                                    image.id === activeGalleryImage?.id;
+
+                                  return (
                                     <button
+                                      key={image.id}
                                       type="button"
-                                      onClick={() => setSelectedImage(image)}
-                                      aria-label={`View image: ${image.caption || image.altText || detailProject.name}`}
-                                      className="block w-full cursor-zoom-in bg-[var(--sap-bg)]"
+                                      onClick={() =>
+                                        setActiveGalleryImageId(image.id)
+                                      }
+                                      aria-label={`Show image ${index + 1}: ${
+                                        image.caption ||
+                                        image.altText ||
+                                        detailProject.name
+                                      }`}
+                                      aria-pressed={isActive}
+                                      style={{
+                                        flex: "0 0 calc((100% - 2.25rem) / 4)",
+                                      }}
+                                      className={`snap-start overflow-hidden border transition ${
+                                        isActive
+                                          ? "border-[var(--sap-blue-bright)] opacity-100"
+                                          : "border-[var(--sap-border)]/50 opacity-60 hover:opacity-100"
+                                      }`}
                                     >
                                       <img
                                         src={image.imageUrl}
-                                        alt={
-                                          image.altText || detailProject.name
-                                        }
+                                        alt={image.altText || ""}
                                         loading="lazy"
-                                        className="aspect-video w-full object-contain transition duration-300 hover:scale-[1.02]"
+                                        className="aspect-video w-full bg-[var(--sap-bg)] object-cover"
                                       />
+
+                                      <span className="block truncate px-1.5 py-2 text-left font-mono text-[7px] tracking-wider text-[var(--sap-muted)]">
+                                        {String(index + 1).padStart(2, "0")}
+                                        {image.isCover ? " · COVER" : ""}
+                                      </span>
                                     </button>
+                                  );
+                                })}
+                              </div>
 
-                                    <div className="p-2">
-                                      {image.isCover && (
-                                        <p className="mb-1 font-mono text-[7px] tracking-[0.15em] text-[var(--sap-blue-bright)]">
-                                          COVER IMAGE
-                                        </p>
-                                      )}
-
-                                      {image.caption && (
-                                        <p className="break-words font-mono text-[8px] leading-4 text-[var(--sap-muted)]">
-                                          {image.caption}
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
+                              {galleryImages.length > 4 && (
+                                <p className="mt-1 font-mono text-[7px] tracking-widest text-[var(--sap-muted)]">
+                                  SCROLL HORIZONTALLY TO EXPLORE →
+                                </p>
+                              )}
                             </div>
                           </div>
                         )}

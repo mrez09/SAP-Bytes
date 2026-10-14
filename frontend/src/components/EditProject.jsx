@@ -147,6 +147,7 @@ function EditProject() {
             category: project.category,
             type: project.type,
             status: project.status,
+            sortOrder: Number(project.sortOrder ?? 0),
             subtitle: project.subtitle,
             overview: project.overview,
             videoUrl: project.videoUrl,
@@ -432,6 +433,37 @@ function EditProject() {
                 />
               </label>
             ))}
+
+            <div className="space-y-2">
+              <label
+                htmlFor="sortOrder"
+                className="font-mono text-xs tracking-widest text-[var(--sap-muted)]"
+              >
+                DISPLAY ORDER
+              </label>
+
+              <input
+                id="sortOrder"
+                type="number"
+                min="0"
+                step="1"
+                value={project.sortOrder ?? 0}
+                onChange={(event) =>
+                  setProject((current) => ({
+                    ...current,
+                    sortOrder:
+                      event.target.value === ""
+                        ? 0
+                        : Math.max(0, Number(event.target.value)),
+                  }))
+                }
+                className="w-full border border-[var(--sap-border)] bg-[var(--sap-bg)] px-3 py-2 font-mono text-sm text-[var(--sap-text)] outline-none focus:border-[var(--sap-blue-bright)]"
+              />
+
+              <p className="text-xs text-[var(--sap-muted)]">
+                Lower numbers appear first in the project archive.
+              </p>
+            </div>
 
             {textareas.map((field) => (
               <label
